@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shreyash Bank Ltd — Card Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: rgba(255,255,255,0.07);
+    --gold: #c9a84c;
+    --gold-light: #f0d080;
+    --gold-dim: rgba(201,168,76,0.15);
+    --text: #e8e0d0;
+    --muted: #7a7060;
+    --card-w: 420px;
+    --card-h: 260px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  header {
+    width: 100%;
+    text-align: center;
+    padding: 48px 24px 32px;
+    position: relative;
+    z-index: 1;
+  }
+  .bank-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(22px, 4vw, 34px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-shadow: 0 0 40px rgba(201,168,76,0.35);
+  }
+  .tagline {
+    font-size: 13px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    margin-top: 6px;
+    text-transform: uppercase;
+  }
+  main {
+    width: 100%;
+    max-width: 940px;
+    padding: 0 24px 80px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 48px;
+  }
+
+  /* ── CARD SCENE ── */
+  .card-scene {
+    perspective: 1200px;
+    width: var(--card-w);
+    height: var(--card-h);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .card-flip {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+  }
+  .card-scene:hover .card-flip { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    overflow: hidden;
+  }
+
+  /* ── FRONT ── */
+  .card-front {
+    background: linear-gradient(135deg, #1a1206 0%, #2a2010 30%, #1e1a0e 60%, #0e0c06 100%);
+    border: 1px solid rgba(201,168,76,0.3);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7), inset 0 1px 0 rgba(201,168,76,0.2);
+  }
+  .card-front::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 40%, rgba(201,168,76,0.04) 50%, transparent 60%);
+    animation: shimmer 4s ease-in-out infinite;
+  }
+  .card-front::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  @keyframes shimmer { 0%,100%{opacity:.5} 50%{opacity:1} }
+  .card-front-inner {
+    position: relative;
+    z-index: 2;
+    padding: 22px 26px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .card-bank {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    color: var(--gold);
+    text-shadow: 0 0 12px rgba(201,168,76,0.4);
+    line-height: 1.3;
+  }
+  .card-bank span {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(201,168,76,0.5);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+  }
+  .chip {
+    width: 44px; height: 34px;
+    background: linear-gradient(135deg, #d4a843 0%, #f0d080 30%, #b8922a 60%, #e8c860 100%);
+    border-radius: 6px;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+  }
+  .chip::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(0,0,0,0.25);
+    border-radius: 3px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent);
+  }
+  .chip-lines { position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-around;padding:5px 4px; }
+  .chip-line { height:1px;background:rgba(0,0,0,0.2); }
+  .card-mid { display:flex;justify-content:space-between;align-items:center;margin-top:-4px; }
+  .contactless { display:flex;flex-direction:column;align-items:flex-end; }
+  .contactless-icon { width:24px;height:24px;position:relative; }
+  .contactless-icon::before,.contactless-icon::after {
+    content:'';position:absolute;border:2px solid rgba(201,168,76,0.5);border-radius:50%;top:50%;left:50%;
+  }
+  .contactless-icon::before { width:16px;height:16px;transform:translate(-50%,-50%);border-color:rgba(201,168,76,0.7); }
+  .contactless-icon::after  { width:28px;height:28px;transform:translate(-50%,-50%);border-color:rgba(201,168,76,0.3); }
+  .card-number {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 19px;
+    color: var(--text);
+    text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    display: flex;
+    gap: 18px;
+    transition: opacity 0.35s, transform 0.35s;
+  }
+  .card-number span {
+    letter-spacing: 0.18em;
+    margin-right: -0.18em;
+  }
+  .card-bottom { display:flex;justify-content:space-between;align-items:flex-end; }
+  .card-holder-label,.card-expiry-label { font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:3px; }
+  .card-holder-name {
+    font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:0.1em;
+    color:var(--text);text-transform:uppercase;max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .card-expiry-wrap { text-align:right; }
+  .card-expiry { font-family:'Share Tech Mono',monospace;font-size:14px;letter-spacing:0.1em;color:var(--text); }
+
+  /* ── Network logo area ── */
+  .network-logo { display:flex;align-items:center;height:38px; }
+  .network-logo svg { height:100%;width:auto;max-width:72px; }
+
+  /* ── BACK ── */
+  .card-back {
+    background: linear-gradient(135deg, #12100a 0%, #1c1810 50%, #0e0c06 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    transform: rotateY(180deg);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.7);
+  }
+  .card-back-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .mag-stripe { width:100%;height:44px;background:#111;margin-top:28px;flex-shrink:0;position:relative; }
+  .mag-stripe::after { content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent); }
+  .signature-panel {
+    margin:14px 26px 0;
+    flex-shrink: 0;
+    background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.03),rgba(255,255,255,0.03) 2px,transparent 2px,transparent 8px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:4px;
+    height:38px;
+    display:flex;align-items:center;padding:0 12px;gap:12px;
+  }
+  .sig-line { flex:1;height:1px;background:var(--muted);opacity:0.3; }
+  .cvv-display {
+    font-family:'Share Tech Mono',monospace;font-size:18px;
+    color:var(--bg);background:#fff;padding:2px 8px;border-radius:3px;letter-spacing:0.1em;font-weight:bold;
+  }
+  .card-back-footer {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 26px 14px;
+  }
+  .card-back-bottom { font-size:9px;color:var(--muted);letter-spacing:0.12em;line-height:1.6;max-width:280px; }
+  /* back network logo */
+  .card-back-network { height:28px;opacity:0.5;flex-shrink:0; }
+  .card-back-network svg { height:100%;width:auto; }
+
+  .hint-text { text-align:center;font-size:12px;color:var(--muted);letter-spacing:0.15em;margin-top:10px;opacity:0.6; }
+
+  /* ── FORM ── */
+  .form-panel {
+    width:100%;max-width:520px;
+    background:var(--surface);border:1px solid var(--border);
+    border-radius:16px;padding:36px 36px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.4);
+  }
+  .form-title { font-family:'Cinzel',serif;font-size:16px;color:var(--gold);letter-spacing:0.15em;margin-bottom:28px;text-align:center; }
+  .field { margin-bottom:20px; }
+  label { display:block;font-size:11px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;margin-bottom:8px; }
+  input[type="text"] {
+    width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+    border-radius:8px;padding:12px 16px;color:var(--text);
+    font-family:'Share Tech Mono',monospace;font-size:15px;letter-spacing:0.08em;
+    outline:none;transition:border-color 0.2s,box-shadow 0.2s;
+  }
+  input[type="text"]:focus { border-color:rgba(201,168,76,0.5);box-shadow:0 0 0 3px rgba(201,168,76,0.08); }
+  input[type="text"]::placeholder { color:rgba(120,110,90,0.5); }
+  .number-row { display:flex;align-items:flex-end;gap:12px; }
+  .number-row .field { flex:1;margin-bottom:0; }
+  .expiry-row { display:flex;gap:12px; }
+  .expiry-row .field { flex:1;margin-bottom:0; }
+  select {
+    width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);
+    border-radius:8px;padding:12px 14px;color:var(--text);
+    font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:500;letter-spacing:0.05em;
+    outline:none;appearance:none;-webkit-appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 14px center;
+    transition:border-color 0.2s,box-shadow 0.2s;
+  }
+  select:focus { border-color:rgba(201,168,76,0.5);box-shadow:0 0 0 3px rgba(201,168,76,0.08); }
+  select option { background:#1a1a1a;color:var(--text); }
+
+  /* ── Network selector pills ── */
+  .network-picker { display:flex;gap:10px;flex-wrap:wrap; }
+  .net-btn {
+    flex:1;min-width:80px;
+    background:rgba(255,255,255,0.04);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:10px 8px;
+    cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    transition:border-color 0.2s,background 0.2s,box-shadow 0.2s;
+    position:relative;
+  }
+  .net-btn:hover { border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.05); }
+  .net-btn.active {
+    border-color:rgba(201,168,76,0.7);
+    background:rgba(201,168,76,0.1);
+    box-shadow:0 0 0 1px rgba(201,168,76,0.3);
+  }
+  .net-btn svg { height:26px;width:auto;max-width:60px; }
+  .net-btn span { font-size:10px;letter-spacing:0.1em;color:var(--muted);font-family:'Rajdhani',sans-serif;font-weight:600; }
+  .net-btn.active span { color:var(--gold); }
+
+  /* ── Buttons ── */
+  .btn-row { display:flex;gap:12px;margin-top:28px; }
+  .btn {
+    flex:1;padding:14px 20px;border-radius:10px;
+    font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:700;
+    letter-spacing:0.2em;text-transform:uppercase;cursor:pointer;border:none;outline:none;
+    transition:all 0.2s;position:relative;overflow:hidden;
+  }
+  .btn::after { content:'';position:absolute;inset:0;background:rgba(255,255,255,0);transition:background 0.15s; }
+  .btn:hover::after { background:rgba(255,255,255,0.05); }
+  .btn:active { transform:scale(0.97); }
+  .btn-primary {
+    background:linear-gradient(135deg,#b8922a,#e8c860,#b8922a);
+    background-size:200% 100%;
+    color:#1a1206;
+    box-shadow:0 4px 20px rgba(201,168,76,0.3);
+    animation:btn-shimmer 3s linear infinite;
+  }
+  @keyframes btn-shimmer { 0%{background-position:0% 0%} 100%{background-position:200% 0%} }
+  .btn-secondary { background:rgba(255,255,255,0.05);color:var(--text);border:1px solid var(--border); }
+  .btn-secondary:hover { border-color:rgba(201,168,76,0.3);color:var(--gold); }
+  .btn-download { background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.3); }
+  .btn-download:hover { background:rgba(201,168,76,0.2);border-color:rgba(201,168,76,0.5); }
+  .btn-download:disabled { opacity:0.4;cursor:not-allowed; }
+  .btn-download:disabled:hover { background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.3); }
+
+  /* ── Toast ── */
+  .toast {
+    position:fixed;bottom:30px;left:50%;
+    transform:translateX(-50%) translateY(80px);
+    background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.3);
+    color:var(--gold-light);padding:10px 24px;border-radius:30px;
+    font-size:13px;letter-spacing:0.15em;backdrop-filter:blur(8px);
+    transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1),opacity 0.35s;
+    opacity:0;pointer-events:none;z-index:100;
+  }
+  .toast.show { transform:translateX(-50%) translateY(0);opacity:1; }
+
+  /* ── Particles ── */
+  .particle {
+    position:fixed;width:2px;height:2px;background:var(--gold);border-radius:50%;
+    pointer-events:none;opacity:0;animation:float-particle linear infinite;z-index:0;
+  }
+  @keyframes float-particle {
+    0%{transform:translateY(100vh) scale(0);opacity:0}
+    10%{opacity:0.4;transform:translateY(90vh) scale(1)}
+    90%{opacity:0.2}
+    100%{transform:translateY(-10vh) scale(0);opacity:0}
+  }
+
+  /* ── Offscreen render canvas (for download) ── */
+  #renderStage {
+    position:fixed;top:-9999px;left:-9999px;
+    display:flex;gap:0;
+    background:#0a0c10;
+    padding:32px;
+    border-radius:0;
+    z-index:-1;
+  }
+  .render-card {
+    width:420px;height:260px;border-radius:18px;overflow:hidden;position:relative;flex-shrink:0;
+  }
+  .render-front {
+    background:linear-gradient(135deg,#1a1206 0%,#2a2010 30%,#1e1a0e 60%,#0e0c06 100%);
+    border:1px solid rgba(201,168,76,0.3);
+    margin-right:32px;
+  }
+  .render-back {
+    background:linear-gradient(135deg,#12100a 0%,#1c1810 50%,#0e0c06 100%);
+    border:1px solid rgba(201,168,76,0.2);
+  }
+
+  @media (max-width: 480px) {
+    :root{--card-w:340px;--card-h:210px;}
+    .card-bank{font-size:11px;} .card-number{font-size:15px;}
+    .form-panel{padding:24px 20px;}
+    .number-row{flex-direction:column;}
+    .number-row .field{width:100%;margin-bottom:20px;}
+    .network-picker{gap:6px;}
+  }
+</style>
+</head>
+<body>
+<div id="particles"></div>
+
+<header>
+  <div class="bank-name">Shreyash Bank Ltd</div>
+  <div class="tagline">Debit Card Generator</div>
+</header>
+
+<main>
+  <!-- Card preview -->
+  <div>
+    <div class="card-scene" id="cardScene">
+      <div class="card-flip" id="cardFlip">
+
+        <!-- FRONT -->
+        <div class="card-face card-front">
+          <div class="card-front-inner">
+            <div class="card-top">
+              <div class="card-bank">Shreyash Bank Ltd<span>Est. 2025</span></div>
+              <div class="network-logo" id="networkLogoFront"></div>
+            </div>
+            <div class="card-mid">
+              <div class="chip"><div class="chip-lines"><div class="chip-line"></div><div class="chip-line"></div><div class="chip-line"></div></div></div>
+              <div class="contactless"><div class="contactless-icon"></div></div>
+            </div>
+            <div class="card-number" id="dispNumber"><span>0000</span><span>0000</span><span>0000</span><span>0000</span></div>
+            <div class="card-bottom">
+              <div>
+                <div class="card-holder-label">Card Holder</div>
+                <div class="card-holder-name" id="dispName">YOUR NAME</div>
+              </div>
+              <div class="card-expiry-wrap">
+                <div class="card-expiry-label">Expires</div>
+                <div class="card-expiry" id="dispExpiry">MM/YY</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BACK -->
+        <div class="card-face card-back">
+          <div class="card-back-inner">
+            <div class="mag-stripe"></div>
+            <div class="signature-panel">
+              <div class="sig-line"></div>
+              <div class="cvv-display" id="dispCVV">000</div>
+            </div>
+            <div class="card-back-footer">
+              <div class="card-back-bottom">
+                This card is issued by Shreyash Bank Ltd and is subject to the cardholder agreement. For inquiries call 1800-XXX-XXXX.
+              </div>
+              <div class="card-back-network" id="networkLogoBack"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="hint-text">↺ Hover to reveal CVV</div>
+  </div>
+
+  <!-- Form -->
+  <div class="form-panel">
+    <div class="form-title">Card Details</div>
+
+    <div class="field">
+      <label>Cardholder Name</label>
+      <input type="text" id="inName" placeholder="e.g. Shreyash Patel" maxlength="26">
+    </div>
+
+    <div class="field">
+      <label>Card Network</label>
+      <div class="network-picker" id="networkPicker">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Card Number</label>
+      <div class="number-row">
+        <div class="field" style="flex:1;margin-bottom:0;">
+          <input type="text" id="inNumber" placeholder="Click Generate" readonly style="cursor:pointer">
+        </div>
+        <div class="field" style="width:90px;flex:none;margin-bottom:0;">
+          <label>CVV</label>
+          <input type="text" id="inCVV" placeholder="—" readonly style="text-align:center;cursor:pointer">
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Expiry Date</label>
+      <div class="expiry-row">
+        <div class="field"><select id="inMonth">
+          <option value="">Month</option>
+          <option value="01">01 — January</option><option value="02">02 — February</option>
+          <option value="03">03 — March</option><option value="04">04 — April</option>
+          <option value="05">05 — May</option><option value="06">06 — June</option>
+          <option value="07">07 — July</option><option value="08">08 — August</option>
+          <option value="09">09 — September</option><option value="10">10 — October</option>
+          <option value="11">11 — November</option><option value="12">12 — December</option>
+        </select></div>
+        <div class="field"><select id="inYear"></select></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateCard()">Generate Card</button>
+      <button class="btn btn-secondary" onclick="copyDetails()">Copy Details</button>
+    </div>
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn-download" id="btnDownload" onclick="downloadCard()" disabled>⬇ Download Card as JPG</button>
+    </div>
+  </div>
+</main>
+
+<!-- Offscreen render stage for download -->
+<div id="renderStage">
+  <div class="render-card render-front" id="renderFront"></div>
+  <div class="render-card render-back" id="renderBack"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── SVG logos for each network ──
+const NETWORKS = {
+  visa: {
+    label: 'Visa',
+    bin: ['4532','4916','4556','4929','4024','4539'],
+    logo: `<svg viewBox="0 0 72 24" xmlns="http://www.w3.org/2000/svg">
+      <text x="0" y="20" font-family="Arial Black,sans-serif" font-size="22" font-weight="900"
+        fill="#1a1f71" letter-spacing="-1">VISA</text>
+    </svg>`,
+    logoLight: `<svg viewBox="0 0 72 24" xmlns="http://www.w3.org/2000/svg">
+      <text x="0" y="20" font-family="Arial Black,sans-serif" font-size="22" font-weight="900"
+        fill="#e8e0d0" letter-spacing="-1">VISA</text>
+    </svg>`
+  },
+  mastercard: {
+    label: 'Mastercard',
+    bin: ['5412','5425','5200','5100','5310','5500'],
+    logo: `<svg viewBox="0 0 52 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="16" r="14" fill="#eb001b"/>
+      <circle cx="34" cy="16" r="14" fill="#f79e1b"/>
+      <path d="M26 6.27a14 14 0 0 1 0 19.46A14 14 0 0 1 26 6.27z" fill="#ff5f00"/>
+    </svg>`,
+    logoLight: `<svg viewBox="0 0 52 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="16" r="14" fill="#eb001b"/>
+      <circle cx="34" cy="16" r="14" fill="#f79e1b"/>
+      <path d="M26 6.27a14 14 0 0 1 0 19.46A14 14 0 0 1 26 6.27z" fill="#ff5f00"/>
+    </svg>`
+  },
+  rupay: {
+    label: 'RuPay',
+    bin: ['6070','6071','6521','6522','6523','6074'],
+    logo: `<svg viewBox="0 0 80 32" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="4" width="46" height="24" rx="4" fill="#006A4E"/>
+      <text x="5" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="white">Ru</text>
+      <rect x="30" y="4" width="50" height="24" rx="4" fill="#F47920"/>
+      <text x="34" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="white">Pay</text>
+    </svg>`,
+    logoLight: `<svg viewBox="0 0 80 32" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="4" width="46" height="24" rx="4" fill="#006A4E"/>
+      <text x="5" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="white">Ru</text>
+      <rect x="30" y="4" width="50" height="24" rx="4" fill="#F47920"/>
+      <text x="34" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="white">Pay</text>
+    </svg>`
+  },
+  amex: {
+    label: 'Amex',
+    bin: ['3714','3782','3787','3728','3742','3741'],
+    logo: `<svg viewBox="0 0 70 32" xmlns="http://www.w3.org/2000/svg">
+      <rect width="70" height="32" rx="4" fill="#2E77BC"/>
+      <text x="6" y="13" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="white" letter-spacing="1">AMERICAN</text>
+      <text x="6" y="25" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="white" letter-spacing="1.5">EXPRESS</text>
+    </svg>`,
+    logoLight: `<svg viewBox="0 0 70 32" xmlns="http://www.w3.org/2000/svg">
+      <rect width="70" height="32" rx="4" fill="#2E77BC"/>
+      <text x="6" y="13" font-family="Arial,sans-serif" font-size="8" font-weight="700" fill="white" letter-spacing="1">AMERICAN</text>
+      <text x="6" y="25" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="white" letter-spacing="1.5">EXPRESS</text>
+    </svg>`
+  },
+  maestro: {
+    label: 'Maestro',
+    bin: ['6759','6761','6762','6763','6304','6390'],
+    logo: `<svg viewBox="0 0 52 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="16" r="14" fill="#0099df"/>
+      <circle cx="34" cy="16" r="14" fill="#ef0020" opacity="0.9"/>
+      <path d="M26 6.27a14 14 0 0 1 0 19.46A14 14 0 0 1 26 6.27z" fill="#6c0082" opacity="0.6"/>
+      <text x="26" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="700" fill="white">maestro</text>
+    </svg>`,
+    logoLight: `<svg viewBox="0 0 52 32" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="18" cy="16" r="14" fill="#0099df"/>
+      <circle cx="34" cy="16" r="14" fill="#ef0020" opacity="0.9"/>
+      <path d="M26 6.27a14 14 0 0 1 0 19.46A14 14 0 0 1 26 6.27z" fill="#6c0082" opacity="0.6"/>
+      <text x="26" y="20" text-anchor="middle" font-family="Arial,sans-serif" font-size="7" font-weight="700" fill="white">maestro</text>
+    </svg>`
+  }
+};
+
+let selectedNetwork = 'visa';
+
+// ── Build network picker ──
+function buildNetworkPicker() {
+  const picker = document.getElementById('networkPicker');
+  picker.innerHTML = '';
+  Object.entries(NETWORKS).forEach(([key, net]) => {
+    const btn = document.createElement('button');
+    btn.className = 'net-btn' + (key === selectedNetwork ? ' active' : '');
+    btn.innerHTML = net.logo + `<span>${net.label}</span>`;
+    btn.onclick = () => selectNetwork(key);
+    picker.appendChild(btn);
+  });
+}
+
+function selectNetwork(key) {
+  selectedNetwork = key;
+  document.querySelectorAll('.net-btn').forEach((b,i) => {
+    const k = Object.keys(NETWORKS)[i];
+    b.classList.toggle('active', k === key);
+  });
+  updateNetworkLogos();
+}
+
+function updateNetworkLogos() {
+  const net = NETWORKS[selectedNetwork];
+  document.getElementById('networkLogoFront').innerHTML = net.logoLight;
+  document.getElementById('networkLogoBack').innerHTML = net.logoLight;
+}
+
+// ── Year dropdown ──
+(function(){
+  const sel = document.getElementById('inYear');
+  const cur = new Date().getFullYear();
+  sel.innerHTML = '<option value="">Year</option>';
+  for(let y=cur;y<=cur+9;y++){
+    sel.innerHTML += `<option value="${String(y).slice(-2)}">${y}</option>`;
+  }
+})();
+
+// ── Luhn ──
+function luhnGenerate(partial) {
+  const digits = partial.split('').map(Number);
+  let sum = 0;
+  for(let i=digits.length-1;i>=0;i--){
+    let d = digits[i];
+    if((digits.length-i)%2===0){ d*=2; if(d>9)d-=9; }
+    sum+=d;
+  }
+  return partial + ((10-(sum%10))%10);
+}
+
+function generateCardNumber() {
+  const net = NETWORKS[selectedNetwork];
+  const prefix = net.bin[Math.floor(Math.random()*net.bin.length)];
+  let partial = prefix;
+  // Amex = 15 digits (4+6+5), others = 16
+  const targetLen = selectedNetwork==='amex' ? 14 : 15;
+  while(partial.length < targetLen) partial += Math.floor(Math.random()*10);
+  return luhnGenerate(partial);
+}
+
+function formatCardNumber(num) {
+  if(selectedNetwork==='amex') {
+    return [num.slice(0,4), num.slice(4,10), num.slice(10)];
+  }
+  return num.match(/.{1,4}/g);
+}
+
+function groupsToPlain(groups) {
+  return groups.join(' ');
+}
+
+function groupsToHTML(groups) {
+  return groups.map(g => '<span>'+g+'</span>').join('');
+}
+
+function generateCVV() {
+  const len = selectedNetwork==='amex' ? 4 : 3;
+  let s=''; for(let i=0;i<len;i++) s+=Math.floor(Math.random()*10);
+  return s;
+}
+
+// ── Live bindings ──
+document.getElementById('inName').addEventListener('input',function(){
+  document.getElementById('dispName').textContent = this.value.trim().toUpperCase()||'YOUR NAME';
+});
+document.getElementById('inMonth').addEventListener('change', updateExpiry);
+document.getElementById('inYear').addEventListener('change', updateExpiry);
+
+function updateExpiry(){
+  const m=document.getElementById('inMonth').value;
+  const y=document.getElementById('inYear').value;
+  document.getElementById('dispExpiry').textContent=(m||'MM')+'/'+(y||'YY');
+}
+
+// ── Generate ──
+function generateCard(){
+  const rawNum = generateCardNumber();
+  const formatted = formatCardNumber(rawNum);
+  const cvv = generateCVV();
+
+  document.getElementById('inNumber').value = groupsToPlain(formatted);
+  document.getElementById('inCVV').value = cvv;
+  document.getElementById('dispCVV').textContent = cvv;
+
+  const dispNum = document.getElementById('dispNumber');
+  dispNum.style.opacity='0'; dispNum.style.transform='translateY(6px)';
+  setTimeout(()=>{
+    dispNum.innerHTML=groupsToHTML(formatted);
+    dispNum.style.opacity='1'; dispNum.style.transform='translateY(0)';
+  },100);
+
+  const flip = document.getElementById('cardFlip');
+  flip.style.transition='transform 0.15s';
+  flip.style.transform='scale(1.025)';
+  setTimeout(()=>{
+    flip.style.transition='transform 0.7s cubic-bezier(0.4,0.2,0.2,1)';
+    flip.style.transform='';
+  },150);
+
+  document.getElementById('btnDownload').disabled = false;
+}
+
+// ── Copy ──
+function copyDetails(){
+  const num=document.getElementById('inNumber').value;
+  if(!num){showToast('Generate a card first!');return;}
+  const text =
+    `Bank: Shreyash Bank Ltd\n`+
+    `Network: ${NETWORKS[selectedNetwork].label}\n`+
+    `Name: ${document.getElementById('inName').value||'Not set'}\n`+
+    `Card Number: ${num}\n`+
+    `Expiry: ${document.getElementById('dispExpiry').textContent}\n`+
+    `CVV: ${document.getElementById('inCVV').value}`;
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied to clipboard!'));
+}
+
+// ── Download as JPG ──
+async function downloadCard(){
+  const num = document.getElementById('inNumber').value;
+  if(!num){showToast('Generate a card first!');return;}
+
+  const btn = document.getElementById('btnDownload');
+  btn.textContent = '⏳ Rendering…';
+  btn.disabled = true;
+
+  const net = NETWORKS[selectedNetwork];
+  const name = document.getElementById('inName').value.trim().toUpperCase() || 'YOUR NAME';
+  const expiry = document.getElementById('dispExpiry').textContent;
+  const cvv = document.getElementById('inCVV').value;
+
+  // Build offscreen HTML for both sides
+  const stage = document.getElementById('renderStage');
+
+  // FRONT
+  document.getElementById('renderFront').innerHTML = `
+    <div style="position:relative;z-index:2;padding:22px 26px;height:100%;display:flex;flex-direction:column;justify-content:space-between;font-family:'Cinzel',serif;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div style="font-size:13px;letter-spacing:0.12em;color:#c9a84c;line-height:1.3;">
+          Shreyash Bank Ltd
+          <span style="display:block;font-size:9px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);font-family:'Rajdhani',sans-serif;font-weight:600;">Est. 2025</span>
+        </div>
+        <div style="height:38px;">${net.logoLight}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="width:44px;height:34px;background:linear-gradient(135deg,#d4a843,#f0d080,#b8922a,#e8c860);border-radius:6px;box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>
+        <div style="width:28px;height:28px;border:2px solid rgba(201,168,76,0.5);border-radius:50%;box-shadow:0 0 0 6px rgba(201,168,76,0.2);"></div>
+      </div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:19px;color:#e8e0d0;display:flex;gap:18px;">${num.split(' ').map(g=>'<span style="letter-spacing:0.18em">'+g+'</span>').join('')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div>
+          <div style="font-size:9px;letter-spacing:0.2em;color:#7a7060;text-transform:uppercase;margin-bottom:3px;">Card Holder</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#e8e0d0;text-transform:uppercase;">${name}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:9px;letter-spacing:0.2em;color:#7a7060;text-transform:uppercase;margin-bottom:3px;">Expires</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:14px;color:#e8e0d0;">${expiry}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // BACK
+  document.getElementById('renderBack').innerHTML = `
+    <div style="width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="width:100%;height:44px;background:#111;margin-top:28px;flex-shrink:0;"></div>
+      <div style="margin:14px 26px 0;flex-shrink:0;background:repeating-linear-gradient(-45deg,rgba(255,255,255,0.03),rgba(255,255,255,0.03) 2px,transparent 2px,transparent 8px);border:1px solid rgba(255,255,255,0.1);border-radius:4px;height:38px;display:flex;align-items:center;padding:0 12px;gap:12px;">
+        <div style="flex:1;height:1px;background:#7a7060;opacity:0.3;"></div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:18px;color:#0a0c10;background:#fff;padding:2px 8px;border-radius:3px;letter-spacing:0.1em;font-weight:bold;">${cvv}</div>
+      </div>
+      <div style="flex:1;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 14px;">
+        <div style="font-size:9px;color:#7a7060;letter-spacing:0.12em;line-height:1.6;font-family:'Rajdhani',sans-serif;max-width:280px;">
+          This card is issued by Shreyash Bank Ltd and is subject to the cardholder agreement. For inquiries call 1800-XXX-XXXX.
+        </div>
+        <div style="height:28px;opacity:0.5;flex-shrink:0;">${net.logoLight}</div>
+      </div>
+    </div>`;
+
+  stage.style.display = 'flex';
+
+  await new Promise(r=>setTimeout(r,120));
+
+  try {
+    const canvas = await html2canvas(stage, {
+      scale: 2.5,
+      backgroundColor: '#0a0c10',
+      useCORS: true,
+      logging: false,
+    });
+
+    const link = document.createElement('a');
+    link.download = `shreyash-bank-${selectedNetwork}-card.jpg`;
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+    showToast('Card downloaded!');
+  } catch(e) {
+    showToast('Download failed. Try again.');
+    console.error(e);
+  }
+
+  stage.style.display = 'none';
+  btn.textContent = '⬇ Download Card as JPG';
+  btn.disabled = false;
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ── Particles ──
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<18;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.style.left=Math.random()*100+'vw';
+    p.style.animationDuration=(12+Math.random()*18)+'s';
+    p.style.animationDelay=(Math.random()*20)+'s';
+    p.style.width=p.style.height=(1+Math.random()*2)+'px';
+    c.appendChild(p);
+  }
+})();
+
+// ── Init ──
+buildNetworkPicker();
+updateNetworkLogos();
+setTimeout(generateCard, 400);
+</script>
+</body>
+</html>
